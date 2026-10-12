@@ -9,6 +9,7 @@ export const OpticalRayTracer: React.FC = () => {
     isRayPlaying, 
     raySpeed, 
     steeringTilt, 
+    convexLensPosition,
     flipMirrorPosition,
     detailLevel
   } = useTelescope();
@@ -18,6 +19,8 @@ export const OpticalRayTracer: React.FC = () => {
   // Optical coordinates:
   // Sun rays arrive from +Z (Z = 5.0) parallel with radius r = 0.42
   // Objective lens at Z = 2.9 (refracts and starts convergence)
+  // Ring 1: Vertical Achromatic Doublet at Z = 1.8
+  // Ring 2: 45° Convex Lens movable at Z = 0.5 + convexLensPosition
   // Steering lens at Z = -0.85
   // Flip mirror cube center at Z = -1.35
   // Camera sensor at Z = -2.17
@@ -26,6 +29,7 @@ export const OpticalRayTracer: React.FC = () => {
   const tiltRad = (steeringTilt * Math.PI) / 180;
   // Beam deflection caused by steering lens
   const beamDeflectionY = Math.tan(tiltRad * 0.8) * 0.8; 
+  const convexLensZ = 0.5 + (convexLensPosition || 0);
 
   const isSpec = flipMirrorPosition === 'spectroscopy';
 
@@ -47,6 +51,8 @@ export const OpticalRayTracer: React.FC = () => {
     const centerPoints: THREE.Vector3[] = [];
     centerPoints.push(new THREE.Vector3(0, 0, 4.8));
     centerPoints.push(new THREE.Vector3(0, 0, 2.9)); // At objective
+    centerPoints.push(new THREE.Vector3(0, 0, 1.8)); // At Ring 1 (Vertical Achromatic Doublet)
+    centerPoints.push(new THREE.Vector3(0, 0, convexLensZ)); // At Ring 2 (45° Convex Lens)
     centerPoints.push(new THREE.Vector3(0, 0, -0.85)); // At steering lens
 
     if (!isSpec) {
@@ -68,13 +74,24 @@ export const OpticalRayTracer: React.FC = () => {
       const x0 = Math.cos(angle) * outerR;
       const y0 = Math.sin(angle) * outerR;
 
-      // Convergence at steering lens (ratio ~ 0.4)
+      // Convergence at Ring 1 (Vertical Achromatic Doublet at Z = 1.8)
+      const xDoublet = x0 * 0.72;
+      const yDoublet = y0 * 0.72;
+
+      // Convergence at steering lens (ratio ~ 0.42)
       const xSteer = x0 * 0.42;
       const ySteer = y0 * 0.42;
+
+      // Convergence at Ring 2 (45° Movable Convex Lens)
+      const progressToSteer = Math.max(0, Math.min(1, (1.8 - convexLensZ) / (1.8 - (-0.85))));
+      const xConvex = THREE.MathUtils.lerp(xDoublet, xSteer, progressToSteer);
+      const yConvex = THREE.MathUtils.lerp(yDoublet, ySteer, progressToSteer);
 
       const points: THREE.Vector3[] = [];
       points.push(new THREE.Vector3(x0, y0, 4.8));
       points.push(new THREE.Vector3(x0, y0, 2.9)); // Objective
+      points.push(new THREE.Vector3(xDoublet, yDoublet, 1.8)); // Ring 1: Vertical Achromatic Doublet
+      points.push(new THREE.Vector3(xConvex, yConvex, convexLensZ)); // Ring 2: 45° Convex Lens
       points.push(new THREE.Vector3(xSteer, ySteer, -0.85)); // Steering lens
 
       if (!isSpec) {

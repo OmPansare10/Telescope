@@ -22,6 +22,9 @@ interface TelescopeContextType {
   steeringTilt: number;
   setSteeringTilt: (tilt: number) => void;
   resetSteeringTilt: () => void;
+  convexLensPosition: number; // -0.4 to +0.4 units along optical tube
+  setConvexLensPosition: (pos: number) => void;
+  resetConvexLensPosition: () => void;
   flipMirrorPosition: FlipMirrorState;
   setFlipMirrorPosition: (pos: FlipMirrorState) => void;
   toggleFlipMirror: () => void;
@@ -100,6 +103,7 @@ export const TelescopeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   
   // Mechanical states
   const [steeringTilt, setSteeringTiltState] = useState<number>(0.0);
+  const [convexLensPosition, setConvexLensPositionState] = useState<number>(0.0);
   const [flipMirrorPosition, setFlipMirrorPosition] = useState<FlipMirrorState>('imaging');
   const [explodedProgress, setExplodedProgress] = useState<number>(0.0);
   
@@ -136,6 +140,15 @@ export const TelescopeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const resetSteeringTilt = useCallback(() => {
     setSteeringTilt(0.0);
   }, [setSteeringTilt]);
+
+  const setConvexLensPosition = useCallback((pos: number) => {
+    const clamped = Math.max(-0.4, Math.min(0.4, Number(pos.toFixed(3))));
+    setConvexLensPositionState(clamped);
+  }, []);
+
+  const resetConvexLensPosition = useCallback(() => {
+    setConvexLensPositionState(0.0);
+  }, []);
 
   const toggleFlipMirror = useCallback(() => {
     setFlipMirrorPosition(prev => prev === 'imaging' ? 'spectroscopy' : 'imaging');
@@ -201,6 +214,9 @@ export const TelescopeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     steeringTilt,
     setSteeringTilt,
     resetSteeringTilt,
+    convexLensPosition,
+    setConvexLensPosition,
+    resetConvexLensPosition,
     flipMirrorPosition,
     setFlipMirrorPosition,
     toggleFlipMirror,

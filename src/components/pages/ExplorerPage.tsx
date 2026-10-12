@@ -38,9 +38,13 @@ export const ExplorerPage: React.FC = () => {
     setCameraType,
     detailLevel,
     setDetailLevel,
+    convexLensPosition,
+    setConvexLensPosition,
+    resetConvexLensPosition,
   } = useTelescope();
 
   const [showPartsList, setShowPartsList] = useState<boolean>(false);
+  const [isControlsCollapsed, setIsControlsCollapsed] = useState<boolean>(false);
 
   return (
     <div style={{ position: 'relative', width: '100%', height: 'calc(100vh - 58px)', overflow: 'hidden', background: '#070b14' }}>
@@ -68,8 +72,8 @@ export const ExplorerPage: React.FC = () => {
           position: 'absolute',
           top: '4rem',
           right: '1.25rem',
-          width: '320px',
-          maxHeight: 'calc(100vh - 160px)',
+          width: '300px',
+          maxHeight: isControlsCollapsed ? 'calc(100vh - 120px)' : 'calc(100vh - 400px)',
           background: 'rgba(10, 16, 32, 0.94)',
           backdropFilter: 'blur(20px)',
           border: '1px solid var(--border-medium)',
@@ -146,160 +150,255 @@ export const ExplorerPage: React.FC = () => {
         </div>
       )}
 
-      {/* 6. Simple, Elegant Floating Bottom Control Bar */}
+      {/* 6. Sleek Floating Right-Side Controls Panel */}
       <div style={{
         position: 'absolute',
         bottom: '1.25rem',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        zIndex: 30,
-        background: 'rgba(10, 16, 32, 0.90)',
+        right: '1.25rem',
+        zIndex: 35,
+        width: '290px',
+        background: 'rgba(10, 16, 32, 0.92)',
         backdropFilter: 'blur(20px)',
         border: '1px solid var(--border-medium)',
         borderRadius: 'var(--radius-xl)',
-        padding: '0.65rem 1.25rem',
+        padding: '0.85rem 1rem',
         display: 'flex',
-        alignItems: 'center',
-        gap: '1.25rem',
+        flexDirection: 'column',
+        gap: '0.75rem',
         boxShadow: '0 12px 35px rgba(0, 0, 0, 0.65)',
-        maxWidth: '96vw',
-        flexWrap: 'wrap',
+        transition: 'all 0.2s ease',
       }}>
-        {/* Steering Lens Tilt Slider */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', minWidth: '140px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.6875rem' }}>
-            <span style={{ color: 'var(--text-dim)', fontWeight: 600 }}>Steering Lens Tilt</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-              <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--accent-amber)' }}>
-                {steeringTilt > 0 ? `+${steeringTilt.toFixed(1)}°` : `${steeringTilt.toFixed(1)}°`}
-              </span>
-              <button onClick={resetSteeringTilt} title="Reset tilt" style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer', padding: 0 }}>
-                <RotateCcw size={10} />
+        {/* Panel Header */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          paddingBottom: isControlsCollapsed ? '0' : '0.45rem',
+          borderBottom: isControlsCollapsed ? 'none' : '1px solid var(--border-subtle)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.75rem', fontWeight: 700, color: '#ffffff', letterSpacing: '0.03em', textTransform: 'uppercase' }}>
+            <Sliders size={13} color="var(--accent-teal)" />
+            <span>Telescope Controls</span>
+          </div>
+          <button
+            onClick={() => setIsControlsCollapsed(!isControlsCollapsed)}
+            title={isControlsCollapsed ? "Expand controls" : "Collapse controls"}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--text-muted)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              padding: '2px',
+            }}
+          >
+            {isControlsCollapsed ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+          </button>
+        </div>
+
+        {!isControlsCollapsed && (
+          <>
+            {/* Steering Lens Tilt Slider */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.6875rem' }}>
+                <span style={{ color: 'var(--text-dim)', fontWeight: 600 }}>Steering Lens Tilt</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--accent-amber)' }}>
+                    {steeringTilt > 0 ? `+${steeringTilt.toFixed(1)}°` : `${steeringTilt.toFixed(1)}°`}
+                  </span>
+                  <button onClick={resetSteeringTilt} title="Reset tilt to 0°" style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer', padding: 0 }}>
+                    <RotateCcw size={11} />
+                  </button>
+                </div>
+              </div>
+              <input
+                type="range"
+                min="-5.0"
+                max="5.0"
+                step="0.1"
+                value={steeringTilt}
+                onChange={(e) => setSteeringTilt(parseFloat(e.target.value))}
+                className="range-slider"
+              />
+            </div>
+
+            {/* Explode View Slider */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.6875rem' }}>
+                <span style={{ color: 'var(--text-dim)', fontWeight: 600 }}>Explode View</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--accent-teal)' }}>
+                    {Math.round(explodedProgress * 100)}%
+                  </span>
+                  <button onClick={resetExploded} title="Reset collapse" style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer', padding: 0 }}>
+                    <RotateCcw size={11} />
+                  </button>
+                </div>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                value={explodedProgress}
+                onChange={(e) => setExplodedProgress(parseFloat(e.target.value))}
+                className="range-slider"
+              />
+            </div>
+
+            {/* 45° Convex Lens Position Slider (Movable Left/Right) */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.6875rem' }}>
+                <span style={{ color: 'var(--text-dim)', fontWeight: 600 }}>45° Convex Lens (L/R)</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--accent-teal)' }}>
+                    {convexLensPosition > 0 ? `+${Math.round(convexLensPosition * 100)}mm` : `${Math.round(convexLensPosition * 100)}mm`}
+                  </span>
+                  <button onClick={resetConvexLensPosition} title="Center lens (0 mm)" style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer', padding: 0 }}>
+                    <RotateCcw size={11} />
+                  </button>
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                <button
+                  onClick={() => setConvexLensPosition(convexLensPosition + 0.05)}
+                  title="Move Lens Left (Towards front)"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.08)',
+                    border: '1px solid var(--border-subtle)',
+                    borderRadius: 'var(--radius-sm)',
+                    color: 'var(--text-main)',
+                    cursor: 'pointer',
+                    padding: '2px 7px',
+                    fontSize: '0.6875rem',
+                    fontWeight: 700,
+                  }}
+                >
+                  ◀ Left
+                </button>
+                <input
+                  type="range"
+                  min="-0.4"
+                  max="0.4"
+                  step="0.01"
+                  value={convexLensPosition}
+                  onChange={(e) => setConvexLensPosition(parseFloat(e.target.value))}
+                  className="range-slider"
+                  style={{ flex: 1 }}
+                />
+                <button
+                  onClick={() => setConvexLensPosition(convexLensPosition - 0.05)}
+                  title="Move Lens Right (Towards rear)"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.08)',
+                    border: '1px solid var(--border-subtle)',
+                    borderRadius: 'var(--radius-sm)',
+                    color: 'var(--text-main)',
+                    cursor: 'pointer',
+                    padding: '2px 7px',
+                    fontSize: '0.6875rem',
+                    fontWeight: 700,
+                  }}
+                >
+                  Right ▶
+                </button>
+              </div>
+            </div>
+
+            <div style={{ height: '1px', background: 'var(--border-subtle)', margin: '0.1rem 0' }} />
+
+            {/* View Mode: Solid / Cutaway / Transparent */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', background: 'rgba(255, 255, 255, 0.05)', borderRadius: 'var(--radius-md)', padding: '2px', border: '1px solid var(--border-subtle)' }}>
+              <button
+                onClick={() => setViewMode('solid')}
+                style={{
+                  padding: '0.35rem 0.3rem',
+                  fontSize: '0.75rem',
+                  fontWeight: 500,
+                  borderRadius: 'var(--radius-sm)',
+                  border: 'none',
+                  background: viewMode === 'solid' ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
+                  color: viewMode === 'solid' ? '#fff' : 'var(--text-muted)',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                }}
+              >
+                Solid
+              </button>
+              <button
+                onClick={() => setViewMode('cutaway')}
+                style={{
+                  padding: '0.35rem 0.3rem',
+                  fontSize: '0.75rem',
+                  fontWeight: 500,
+                  borderRadius: 'var(--radius-sm)',
+                  border: 'none',
+                  background: viewMode === 'cutaway' ? 'rgba(245, 158, 11, 0.25)' : 'transparent',
+                  color: viewMode === 'cutaway' ? 'var(--accent-amber)' : 'var(--text-muted)',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                }}
+              >
+                Cutaway
+              </button>
+              <button
+                onClick={() => setViewMode('transparent')}
+                style={{
+                  padding: '0.35rem 0.3rem',
+                  fontSize: '0.75rem',
+                  fontWeight: 500,
+                  borderRadius: 'var(--radius-sm)',
+                  border: 'none',
+                  background: viewMode === 'transparent' ? 'rgba(6, 182, 212, 0.25)' : 'transparent',
+                  color: viewMode === 'transparent' ? 'var(--accent-teal)' : 'var(--text-muted)',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                }}
+              >
+                Transparent
               </button>
             </div>
-          </div>
-          <input
-            type="range"
-            min="-5.0"
-            max="5.0"
-            step="0.1"
-            value={steeringTilt}
-            onChange={(e) => setSteeringTilt(parseFloat(e.target.value))}
-            className="range-slider"
-          />
-        </div>
 
-        <div style={{ width: '1px', height: '24px', background: 'var(--border-subtle)' }} />
-
-        {/* Explode Slider */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', minWidth: '130px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.6875rem' }}>
-            <span style={{ color: 'var(--text-dim)', fontWeight: 600 }}>Explode View</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-              <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--accent-teal)' }}>
-                {Math.round(explodedProgress * 100)}%
-              </span>
-              <button onClick={resetExploded} title="Reset collapse" style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer', padding: 0 }}>
-                <RotateCcw size={10} />
+            {/* Flip Mirror, Camera, and Light Rays Buttons */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              {/* Flip Mirror: Imaging vs Spectroscopy */}
+              <button
+                onClick={toggleFlipMirror}
+                className={`btn btn-sm ${flipMirrorPosition === 'spectroscopy' ? 'btn-amber' : 'btn-secondary'}`}
+                style={{ height: '32px', width: '100%', justifyContent: 'center' }}
+                title="Switch Flip Mirror between Straight Camera and 90° Spectroscopy Port"
+              >
+                <SplitSquareVertical size={13} />
+                <span>{flipMirrorPosition === 'spectroscopy' ? 'Port: Spectroscopy' : 'Port: Camera'}</span>
               </button>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.4rem' }}>
+                {/* Camera Selector: CMOS vs DSLR */}
+                <button
+                  onClick={() => setCameraType(cameraType === 'scientific-cmos' ? 'dslr' : 'scientific-cmos')}
+                  className="btn btn-sm btn-secondary"
+                  style={{ height: '32px', justifyContent: 'center', padding: '0 0.4rem', fontSize: '0.6875rem' }}
+                  title="Switch Camera between Cooled Scientific CMOS and DSLR"
+                >
+                  <Camera size={13} />
+                  <span>{cameraType === 'scientific-cmos' ? 'Camera: CMOS' : 'Camera: DSLR'}</span>
+                </button>
+
+                {/* Light Rays ON/OFF */}
+                <button
+                  onClick={toggleRays}
+                  className={`btn btn-sm ${showRays ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{ height: '32px', justifyContent: 'center', padding: '0 0.4rem', fontSize: '0.6875rem' }}
+                  title="Toggle Sunlight Ray Paths"
+                >
+                  <Sun size={13} />
+                  <span>{showRays ? 'Rays ON' : 'Rays OFF'}</span>
+                </button>
+              </div>
             </div>
-          </div>
-          <input
-            type="range"
-            min="0"
-            max="1"
-            step="0.01"
-            value={explodedProgress}
-            onChange={(e) => setExplodedProgress(parseFloat(e.target.value))}
-            className="range-slider"
-          />
-        </div>
-
-        <div style={{ width: '1px', height: '24px', background: 'var(--border-subtle)' }} />
-
-        {/* View Mode: Solid / Cutaway / Transparent */}
-        <div style={{ display: 'flex', background: 'rgba(255, 255, 255, 0.05)', borderRadius: 'var(--radius-md)', padding: '2px', border: '1px solid var(--border-subtle)' }}>
-          <button
-            onClick={() => setViewMode('solid')}
-            style={{
-              padding: '0.35rem 0.55rem',
-              fontSize: '0.75rem',
-              fontWeight: 500,
-              borderRadius: 'var(--radius-sm)',
-              border: 'none',
-              background: viewMode === 'solid' ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
-              color: viewMode === 'solid' ? '#fff' : 'var(--text-muted)',
-              cursor: 'pointer',
-            }}
-          >
-            Solid
-          </button>
-          <button
-            onClick={() => setViewMode('cutaway')}
-            style={{
-              padding: '0.35rem 0.55rem',
-              fontSize: '0.75rem',
-              fontWeight: 500,
-              borderRadius: 'var(--radius-sm)',
-              border: 'none',
-              background: viewMode === 'cutaway' ? 'rgba(245, 158, 11, 0.25)' : 'transparent',
-              color: viewMode === 'cutaway' ? 'var(--accent-amber)' : 'var(--text-muted)',
-              cursor: 'pointer',
-            }}
-          >
-            Cutaway
-          </button>
-          <button
-            onClick={() => setViewMode('transparent')}
-            style={{
-              padding: '0.35rem 0.55rem',
-              fontSize: '0.75rem',
-              fontWeight: 500,
-              borderRadius: 'var(--radius-sm)',
-              border: 'none',
-              background: viewMode === 'transparent' ? 'rgba(6, 182, 212, 0.25)' : 'transparent',
-              color: viewMode === 'transparent' ? 'var(--accent-teal)' : 'var(--text-muted)',
-              cursor: 'pointer',
-            }}
-          >
-            Transparent
-          </button>
-        </div>
-
-        <div style={{ width: '1px', height: '24px', background: 'var(--border-subtle)' }} />
-
-        {/* Flip Mirror: Imaging vs Spectroscopy */}
-        <button
-          onClick={toggleFlipMirror}
-          className={`btn btn-sm ${flipMirrorPosition === 'spectroscopy' ? 'btn-amber' : 'btn-secondary'}`}
-          style={{ height: '32px' }}
-          title="Switch Flip Mirror between Straight Camera and 90° Spectroscopy Port"
-        >
-          <SplitSquareVertical size={13} />
-          <span>{flipMirrorPosition === 'spectroscopy' ? 'Port: Spectroscopy' : 'Port: Camera'}</span>
-        </button>
-
-        {/* Camera Selector: CMOS vs DSLR */}
-        <button
-          onClick={() => setCameraType(cameraType === 'scientific-cmos' ? 'dslr' : 'scientific-cmos')}
-          className="btn btn-sm btn-secondary"
-          style={{ height: '32px' }}
-          title="Switch Camera between Cooled Scientific CMOS and DSLR"
-        >
-          <Camera size={13} />
-          <span>{cameraType === 'scientific-cmos' ? 'Camera: CMOS' : 'Camera: DSLR'}</span>
-        </button>
-
-        {/* Light Rays ON/OFF */}
-        <button
-          onClick={toggleRays}
-          className={`btn btn-sm ${showRays ? 'btn-primary' : 'btn-secondary'}`}
-          style={{ height: '32px' }}
-          title="Toggle Sunlight Ray Paths"
-        >
-          <Sun size={13} />
-          <span>{showRays ? 'Rays ON' : 'Rays OFF'}</span>
-        </button>
+          </>
+        )}
       </div>
     </div>
   );
